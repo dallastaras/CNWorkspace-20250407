@@ -15,7 +15,7 @@ import OfflinePage from './pages/OfflinePage';
 import CourseDetails from './pages/CourseDetails';
 import CourseManagement from './pages/CourseManagement';
 import MenuItems from './pages/MenuItems';
-import { CourseDetails as CourseEdit } from './pages/CourseDetails';
+import { CourseDetails as CourseEdit } from './components/learning/CourseDetails';
 import Login from './pages/Login';
 import Workspace from './pages/Workspace';
 import MyWork from './pages/MyWork';
