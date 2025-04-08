@@ -123,7 +123,7 @@ const Profile = () => {
         </div>
 
         <div className="px-4 py-5 sm:p-6 pt-16">
-          {/* User info section */}
+          {/* User info section Goes here*/}
           <div className="mt-2">
             <h2 className={`text-xl font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.email?.split('@')[0]}
