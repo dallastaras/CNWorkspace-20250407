@@ -930,6 +930,7 @@ const MenuItems = () => {
                           <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                             Calories
                           </span>
+                          
                           <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}>
                             {item.nutrition.calories}
                           </span>
@@ -1050,17 +1051,12 @@ const MenuItems = () => {
                   <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${
                     darkMode ? 'text-gray-300' : 'text-gray-500'
                   } uppercase tracking-wider`}>
-                    Cost
-                  </th>
-                  <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${
-                    darkMode ? 'text-gray-300' : 'text-gray-500'
-                  } uppercase tracking-wider`}>
-                    Satisfaction
-                  </th>
-                  <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${
-                    darkMode ? 'text-gray-300' : 'text-gray-500'
-                  } uppercase tracking-wider`}>
                     Waste
+                  </th>
+                  <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${
+                    darkMode ? 'text-gray-300' : 'text-gray-500'
+                  } uppercase tracking-wider`}>
+                    Cost
                   </th>
                   <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${
                     darkMode ? 'text-gray-300' : 'text-gray-500'
@@ -1104,10 +1100,10 @@ const MenuItems = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <span className={`text-sm font-medium ${getTrendColor(item.metrics.cost.trend, true)}`}>
-                          ${item.metrics.cost.value.toFixed(2)}
+                        <span className={`text-sm font-medium ${getTrendColor(item.metrics.waste.trend, true)}`}>
+                          {item.metrics.waste.value}%
                         </span>
-                        {item.metrics.cost.trend === 'up' ? (
+                        {item.metrics.waste.trend === 'up' ? (
                           <TrendingUp className={`w-4 h-4 ${getTrendColor('up', true)}`} />
                         ) : (
                           <TrendingDown className={`w-4 h-4 ${getTrendColor('down', true)}`} />
@@ -1116,22 +1112,10 @@ const MenuItems = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <span className={`text-sm font-medium ${getTrendColor(item.metrics.satisfaction.trend)}`}>
-                          {item.metrics.satisfaction.value}%
+                        <span className={`text-sm font-medium ${getTrendColor(item.metrics.cost.trend, true)}`}>
+                          ${item.metrics.cost.value.toFixed(2)}
                         </span>
-                        {item.metrics.satisfaction.trend === 'up' ? (
-                          <TrendingUp className={`w-4 h-4 ${getTrendColor('up')}`} />
-                        ) : (
-                          <TrendingDown className={`w-4 h-4 ${getTrendColor('down')}`} />
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <span className={`text-sm font-medium ${getTrendColor(item.metrics.waste.trend, true)}`}>
-                          {item.metrics.waste.value}%
-                        </span>
-                        {item.metrics.waste.trend === 'up' ? (
+                        {item.metrics.cost.trend === 'up' ? (
                           <TrendingUp className={`w-4 h-4 ${getTrendColor('up', true)}`} />
                         ) : (
                           <TrendingDown className={`w-4 h-4 ${getTrendColor('down', true)}`} />
@@ -1156,4 +1140,4 @@ const MenuItems = () => {
   );
 };
 
-export default MenuItems
+export default MenuItems;
