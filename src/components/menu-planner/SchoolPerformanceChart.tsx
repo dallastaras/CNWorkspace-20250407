@@ -24,13 +24,15 @@ import {
 
 interface SchoolPerformanceChartProps {
   timeframe?: 'week' | 'month' | 'year';
+  selectedSchool?: string;
 }
 
 const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({ 
-  timeframe = 'month' 
+  timeframe = 'month',
+  selectedSchool = 'district'
 }) => {
   const darkMode = useStore((state) => state.darkMode);
-  const [filterType, setFilterType] = useState<'waste' | 'accuracy' | 'overall'>('overall');
+  const [filterType, setFilterType] = useState<'waste-percent' | 'waste-dollars' | 'accuracy' | 'overall'>('overall');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showTopPerformers, setShowTopPerformers] = useState(true);
 
@@ -43,6 +45,7 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
       served: 1268, 
       waste: 52,
       wastePercentage: 3.9,
+      wasteDollars: 130,
       accuracy: 96.1,
       overall: 94
     },
@@ -53,6 +56,7 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
       served: 845, 
       waste: 30,
       wastePercentage: 3.4,
+      wasteDollars: 75,
       accuracy: 96.6,
       overall: 95
     },
@@ -63,6 +67,7 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
       served: 672, 
       waste: 18,
       wastePercentage: 2.6,
+      wasteDollars: 45,
       accuracy: 97.4,
       overall: 96
     },
@@ -73,6 +78,7 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
       served: 1180, 
       waste: 170,
       wastePercentage: 12.6,
+      wasteDollars: 425,
       accuracy: 87.4,
       overall: 78
     },
@@ -83,17 +89,27 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
       served: 595, 
       waste: 35,
       wastePercentage: 5.6,
+      wasteDollars: 87.5,
       accuracy: 94.4,
       overall: 92
     }
   ];
   
+  // Filter data based on selected school
+  const filteredSchoolPerformance = selectedSchool === 'district' 
+    ? schoolPerformance 
+    : schoolPerformance.filter(school => school.name === schools.find(s => s.id === selectedSchool)?.name);
+  
   // Sort and filter the data based on user selections
-  const sortedSchoolPerformance = [...schoolPerformance].sort((a, b) => {
-    if (filterType === 'waste') {
+  const sortedSchoolPerformance = [...filteredSchoolPerformance].sort((a, b) => {
+    if (filterType === 'waste-percent') {
       return showTopPerformers 
         ? a.wastePercentage - b.wastePercentage  // For waste, lower is better for top performers
         : b.wastePercentage - a.wastePercentage;
+    } else if (filterType === 'waste-dollars') {
+      return showTopPerformers 
+        ? a.wasteDollars - b.wasteDollars  // For waste dollars, lower is better for top performers
+        : b.wasteDollars - a.wasteDollars;
     } else if (filterType === 'accuracy') {
       return showTopPerformers
         ? b.accuracy - a.accuracy
@@ -110,8 +126,10 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
 
   const getFilterLabel = () => {
     switch (filterType) {
-      case 'waste':
-        return 'Food Waste';
+      case 'waste-percent':
+        return 'Food Waste (%)';
+      case 'waste-dollars':
+        return 'Food Waste ($)';
       case 'accuracy':
         return 'Production Accuracy';
       case 'overall':
@@ -130,30 +148,27 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
     }
   };
 
-  const getBarColor = (value: number, type: 'waste' | 'accuracy' | 'overall') => {
-    if (type === 'waste') {
-      if (value <= 5) return '#22c55e'; // green-500
-      if (value <= 10) return '#eab308'; // yellow-500
-      return '#ef4444'; // red-500
-    } else {
-      if (value >= 95) return '#22c55e'; // green-500
-      if (value >= 85) return '#3b82f6'; // blue-500
-      if (value >= 75) return '#eab308'; // yellow-500
-      return '#ef4444'; // red-500
-    }
+  const getBarColor = (index: number) => {
+    // Use indigo/purple colors for all types
+    // Use the same indigo colors as in TopTrendingItems
+    return `#${(4 + index % 4).toString(16)}F46E5`; // Slight variation of indigo for each bar
   };
 
   const formatValue = (value: number) => {
-    if (filterType === 'waste' || filterType === 'accuracy') {
+    if (filterType === 'waste-percent' || filterType === 'accuracy') {
       return `${value.toFixed(1)}%`;
+    } else if (filterType === 'waste-dollars') {
+      return `$${value.toFixed(2)}`;
     }
     return value.toString();
   };
 
   const getDataKey = () => {
     switch (filterType) {
-      case 'waste':
+      case 'waste-percent':
         return 'wastePercentage';
+      case 'waste-dollars':
+        return 'wasteDollars';
       case 'accuracy':
         return 'accuracy';
       case 'overall':
@@ -163,8 +178,10 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
 
   const getTargetValue = () => {
     switch (filterType) {
-      case 'waste':
+      case 'waste-percent':
         return 5; // 5% waste target
+      case 'waste-dollars':
+        return 100; // $100 waste target
       case 'accuracy':
         return 95; // 95% accuracy target
       case 'overall':
@@ -180,31 +197,15 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
           <p className="text-sm font-medium">{data.name}</p>
           <div className="mt-2 space-y-1">
             <p className="text-xs">
-              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Planned: </span>
-              <span className="font-medium">{data.planned} meals</span>
+              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Planned Meals: </span>
+              <span className="font-medium">{data.planned}</span>
             </p>
             <p className="text-xs">
-              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Produced: </span>
-              <span className="font-medium">{data.produced} meals</span>
+              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Served Meals: </span>
+              <span className="font-medium">{data.served}</span>
             </p>
             <p className="text-xs">
-              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Served: </span>
-              <span className="font-medium">{data.served} meals</span>
-            </p>
-            <p className="text-xs">
-              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Waste: </span>
-              <span className={`font-medium ${
-                data.wastePercentage <= 5 
-                  ? darkMode ? 'text-green-400' : 'text-green-600'
-                  : data.wastePercentage <= 10
-                  ? darkMode ? 'text-amber-400' : 'text-amber-600'
-                  : darkMode ? 'text-red-400' : 'text-red-600'
-              }`}>
-                {data.waste} meals ({data.wastePercentage.toFixed(1)}%)
-              </span>
-            </p>
-            <p className="text-xs">
-              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Accuracy: </span>
+              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Production Accuracy: </span>
               <span className={`font-medium ${
                 data.accuracy >= 95
                   ? darkMode ? 'text-green-400' : 'text-green-600'
@@ -213,6 +214,30 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
                   : darkMode ? 'text-amber-400' : 'text-amber-600'
               }`}>
                 {data.accuracy.toFixed(1)}%
+              </span>
+            </p>
+            <p className="text-xs">
+              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Food Waste (%): </span>
+              <span className={`font-medium ${
+                data.wastePercentage <= 5 
+                  ? darkMode ? 'text-green-400' : 'text-green-600'
+                  : data.wastePercentage <= 10
+                  ? darkMode ? 'text-blue-400' : 'text-blue-600'
+                  : darkMode ? 'text-amber-400' : 'text-amber-600'
+              }`}>
+                {data.wastePercentage.toFixed(1)}%
+              </span>
+            </p>
+            <p className="text-xs">
+              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Food Waste ($): </span>
+              <span className={`font-medium ${
+                data.wasteDollars <= 100
+                  ? darkMode ? 'text-green-400' : 'text-green-600'
+                  : data.wasteDollars <= 200
+                  ? darkMode ? 'text-amber-400' : 'text-amber-600'
+                  : darkMode ? 'text-red-400' : 'text-red-600'
+              }`}>
+                ${data.wasteDollars.toFixed(2)}
               </span>
             </p>
           </div>
@@ -310,12 +335,12 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
                   Production Accuracy
                 </button>
                 <button
-                  onClick={() => {
-                    setFilterType('waste');
-                    setIsFilterOpen(false);
-                  }}
+                 onClick={() => {
+                   setFilterType('waste-percent');
+                   setIsFilterOpen(false);
+                 }}
                   className={`w-full text-left px-4 py-2 text-sm ${
-                    filterType === 'waste'
+                    filterType === 'waste-percent'
                       ? darkMode
                         ? 'bg-gray-600 text-white'
                         : 'bg-indigo-50 text-indigo-600'
@@ -324,7 +349,24 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
                         : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  Food Waste
+                  Food Waste (%)
+                </button>
+                <button
+                  onClick={() => {
+                    setFilterType('waste-dollars');
+                    setIsFilterOpen(false);
+                  }}
+                  className={`w-full flex items-center px-4 py-2 text-left text-sm ${
+                    filterType === 'waste-dollars'
+                      ? darkMode
+                        ? 'bg-gray-600 text-white'
+                        : 'bg-indigo-50 text-indigo-600'
+                      : darkMode
+                        ? 'text-gray-300 hover:bg-gray-600'
+                        : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Food Waste ($)
                 </button>
               </div>
             )}
@@ -351,7 +393,11 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
             <XAxis 
               type="number" 
               stroke={darkMode ? '#9ca3af' : '#6b7280'} 
-              domain={filterType === 'waste' ? [0, 15] : [0, 100]}
+              domain={
+                filterType === 'waste-percent' ? [0, 15] : 
+                filterType === 'waste-dollars' ? [0, 500] : 
+                [0, 100]
+              }
             />
             <YAxis 
               dataKey="name" 
@@ -381,12 +427,7 @@ const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({
               {displayData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={getBarColor(
-                    filterType === 'waste' ? entry.wastePercentage : 
-                    filterType === 'accuracy' ? entry.accuracy : 
-                    entry.overall,
-                    filterType
-                  )} 
+                  fill={getBarColor(index)}
                 />
               ))}
             </Bar>
