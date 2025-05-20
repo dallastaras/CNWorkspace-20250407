@@ -14,13 +14,15 @@ import {
   Heart,
   BarChart2,
   ChevronDown,
-  ChevronRight,
+  Check,
   Bot,
   AlertTriangle,
   CheckCircle2,
   Users,
   ChevronLeft
 } from 'lucide-react';
+import { TimeframeSelector } from '../components/dashboard/TimeframeSelector';
+import { SchoolSelector } from '../components/dashboard/SchoolSelector';
 
 interface MenuItem {
   id: string;
@@ -68,9 +70,18 @@ const MenuItems = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(['Entree', 'Vegetable', 'Fruit', 'Grain', 'Milk']);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showAIInsights, setShowAIInsights] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState<string>('district');
+  const [schools] = useState([
+    { id: 'district', name: 'All Schools' },
+    { id: '1', name: 'Cybersoft High' },
+    { id: '2', name: 'Cybersoft Middle' },
+    { id: '3', name: 'Cybersoft Elementary' },
+    { id: '4', name: 'Primero High' },
+    { id: '5', name: 'Primero Elementary' }
+  ]);
 
   // Sample data - replace with real data from API
   const menuItems: MenuItem[] = [
@@ -645,13 +656,35 @@ const MenuItems = () => {
       : darkMode ? 'text-red-400' : 'text-red-600';
   };
 
+  // Get all unique categories from menu items
+  const categories = Array.from(new Set(menuItems.map(item => item.category)));
+
+  // Handle category selection
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  const selectAllCategories = () => {
+    setSelectedCategories(categories);
+  };
+
+  const clearAllCategories = () => {
+    setSelectedCategories([]);
+  };
+
   const filteredItems = menuItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
+    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(item.category);
     return matchesSearch && matchesCategory;
   });
 
-  const categories = ['all', ...new Set(menuItems.map(item => item.category))];
+  const handleSchoolChange = (schoolId: string) => {
+    setSelectedSchool(schoolId);
+  };
 
   return (
     <div className="space-y-6">
@@ -677,7 +710,13 @@ const MenuItems = () => {
             </p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
+          <TimeframeSelector />
+          <SchoolSelector
+            selectedSchool={selectedSchool}
+            schools={schools}
+            onSchoolChange={handleSchoolChange}
+          />
           <button
             onClick={() => setShowAIInsights(!showAIInsights)}
             className={`p-2 ${
@@ -732,48 +771,73 @@ const MenuItems = () => {
           </div>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           <div className="relative">
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`flex items-center space-x-2 pl-4 pr-10 py-2 rounded-lg ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
                 darkMode 
                   ? 'bg-gray-700 text-white hover:bg-gray-600'
                   : 'bg-white text-gray-900 hover:bg-gray-50'
               } border ${darkMode ? 'border-gray-600' : 'border-gray-300'} relative`}
             >
-              <Filter className="w-4 h-4" />
-              <span>{filterCategory === 'all' ? 'All Categories' : filterCategory}</span>
-              <ChevronDown className={`absolute right-3 w-4 h-4 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+              <Filter className="w-4 h-4 mr-2" />
+              <span>Categories ({selectedCategories.length})</span>
+              <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
             </button>
             {isFilterOpen && (
-              <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg overflow-hidden z-50 ${
+              <div className={`absolute right-0 mt-2 w-56 rounded-lg shadow-lg overflow-hidden z-50 ${
                 darkMode ? 'bg-gray-700 border border-gray-600' : 'bg-white border border-gray-200'
               }`}>
-                {categories.map(category => (
-                  <button
-                    key={category}
-                    onClick={() => {
-                      setFilterCategory(category);
-                      setIsFilterOpen(false);
-                    }}
-                    className={`w-full flex items-center px-4 py-2 text-left text-sm ${
-                      filterCategory === category
-                        ? darkMode
-                          ? 'bg-gray-600 text-white'
-                          : 'bg-indigo-50 text-indigo-600'
-                        : darkMode
-                          ? 'text-gray-300 hover:bg-gray-600'
-                          : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </button>
-                ))}
+                <div className="p-2">
+                  <div className="flex justify-between items-center px-2 py-1 mb-1">
+                    <button
+                      onClick={selectAllCategories}
+                      className={`text-xs ${
+                        darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-700'
+                      }`}
+                    >
+                      Select All
+                    </button>
+                    <button
+                      onClick={clearAllCategories}
+                      className={`text-xs ${
+                        darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-600'
+                      }`}
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  {categories.map(category => (
+                    <div 
+                      key={category}
+                      className={`flex items-center px-2 py-1.5 rounded cursor-pointer ${
+                        darkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => toggleCategory(category)}
+                    >
+                      <div className={`w-5 h-5 flex items-center justify-center rounded mr-2 ${
+                        selectedCategories.includes(category)
+                          ? 'bg-indigo-600 text-white'
+                          : darkMode ? 'border border-gray-500' : 'border border-gray-300'
+                      }`}>
+                        {selectedCategories.includes(category) && (
+                          <Check className="w-3 h-3" />
+                        )}
+                      </div>
+                      <span className={`text-sm ${
+                        darkMode ? 'text-gray-200' : 'text-gray-700'
+                      }`}>
+                        {category}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
+          {/*}
           <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-lg ${
@@ -800,6 +864,7 @@ const MenuItems = () => {
           >
             <TableIcon className="w-5 h-5" />
           </button>
+          */}
         </div>
       </div>
 
@@ -1051,12 +1116,17 @@ const MenuItems = () => {
                   <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${
                     darkMode ? 'text-gray-300' : 'text-gray-500'
                   } uppercase tracking-wider`}>
-                    Waste
+                    Leftover
                   </th>
                   <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${
                     darkMode ? 'text-gray-300' : 'text-gray-500'
                   } uppercase tracking-wider`}>
-                    Cost
+                    Waste $
+                  </th>
+                  <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${
+                    darkMode ? 'text-gray-300' : 'text-gray-500'
+                  } uppercase tracking-wider`}>
+                    Waste %
                   </th>
                   <th scope="col" className={`px-6 py-3 text-right text-xs font-medium ${
                     darkMode ? 'text-gray-300' : 'text-gray-500'
@@ -1100,8 +1170,20 @@ const MenuItems = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end space-x-2">
+                        <span className={`text-sm font-medium ${getTrendColor(item.metrics.participation.trend, true)}`}>
+                          {(100 - item.metrics.participation.value).toFixed(1)}%
+                        </span>
+                        {item.metrics.participation.trend === 'up' ? (
+                          <TrendingDown className={`w-4 h-4 ${getTrendColor('down', true)}`} />
+                        ) : (
+                          <TrendingUp className={`w-4 h-4 ${getTrendColor('up', true)}`} />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end space-x-2">
                         <span className={`text-sm font-medium ${getTrendColor(item.metrics.waste.trend, true)}`}>
-                          {item.metrics.waste.value}%
+                          ${(item.metrics.waste.value * 2.50).toFixed(2)}
                         </span>
                         {item.metrics.waste.trend === 'up' ? (
                           <TrendingUp className={`w-4 h-4 ${getTrendColor('up', true)}`} />
@@ -1112,10 +1194,10 @@ const MenuItems = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <span className={`text-sm font-medium ${getTrendColor(item.metrics.cost.trend, true)}`}>
-                          ${item.metrics.cost.value.toFixed(2)}
+                        <span className={`text-sm font-medium ${getTrendColor(item.metrics.waste.trend, true)}`}>
+                          {item.metrics.waste.value.toFixed(1)}%
                         </span>
-                        {item.metrics.cost.trend === 'up' ? (
+                        {item.metrics.waste.trend === 'up' ? (
                           <TrendingUp className={`w-4 h-4 ${getTrendColor('up', true)}`} />
                         ) : (
                           <TrendingDown className={`w-4 h-4 ${getTrendColor('down', true)}`} />

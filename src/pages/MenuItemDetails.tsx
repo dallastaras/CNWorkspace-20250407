@@ -2,13 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import {
-  ChevronLeft,
+  ChevronLeft, 
   Users,
   DollarSign,
   Star,
   BarChart2,
-  Heart,
-  Calendar,
   TrendingUp,
   TrendingDown,
   CheckCircle2,
@@ -16,6 +14,8 @@ import {
   Bot,
   Clock
 } from 'lucide-react';
+import { TimeframeSelector } from '../components/dashboard/TimeframeSelector';
+import { SchoolSelector } from '../components/dashboard/SchoolSelector';
 
 interface DayPerformance {
   day: string;
@@ -32,7 +32,16 @@ const MenuItemDetails = () => {
   const navigate = useNavigate();
   const darkMode = useStore((state) => state.darkMode);
   const [showCounts, setShowCounts] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState<string>('district');
   const [showSchoolieInsights, setShowSchoolieInsights] = useState(false);
+  const [schools] = useState([
+    { id: 'district', name: 'All Schools' },
+    { id: '1', name: 'Cybersoft High' },
+    { id: '2', name: 'Cybersoft Middle' },
+    { id: '3', name: 'Cybersoft Elementary' },
+    { id: '4', name: 'Primero High' },
+    { id: '5', name: 'Primero Elementary' }
+  ]);
 
   // Sample data - replace with real data from API
   const item = {
@@ -81,6 +90,10 @@ const MenuItemDetails = () => {
       thursday: { participation: 84, waste: 3.6, cost: 1.76, avgProduced: 275, avgServed: 262 },
       friday: { participation: 80, waste: 4.0, cost: 1.80, avgProduced: 265, avgServed: 250 }
     }
+  };
+
+  const handleSchoolChange = (schoolId: string) => {
+    setSelectedSchool(schoolId);
   };
 
   const getScoreColor = (score: number) => {
@@ -151,7 +164,9 @@ const MenuItemDetails = () => {
       <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
         <h2 className={`text-lg font-medium mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           Day of Week Analysis
-          <div className="flex items-center space-x-2 mt-2">
+
+          {/*
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               Show:
             </span>
@@ -180,6 +195,8 @@ const MenuItemDetails = () => {
               Counts
             </button>
           </div>
+          */}
+          
         </h2>
         <div className="overflow-x-auto">
           <table className="min-w-full">
@@ -213,12 +230,12 @@ const MenuItemDetails = () => {
                 <th className={`px-4 py-2 text-right text-xs font-medium ${
                   darkMode ? 'text-gray-300' : 'text-gray-500'
                 } uppercase tracking-wider`}>
-                  Waste
+                  Waste %
                 </th>
                 <th className={`px-4 py-2 text-right text-xs font-medium ${
                   darkMode ? 'text-gray-300' : 'text-gray-500'
                 } uppercase tracking-wider`}>
-                  Cost
+                  Waste $
                 </th>
               </tr>
             </thead>
@@ -251,12 +268,12 @@ const MenuItemDetails = () => {
                     <td className={`px-4 py-2 text-sm text-right ${
                       getScoreColor(100 - dayData.waste * 10).text
                     }`}>
-                      {showCounts ? Math.round(dayData.waste * dayData.avgProduced / 100) : dayData.waste + '%'}
+                      {dayData.waste + '%'}
                     </td>
                     <td className={`px-4 py-2 text-sm text-right ${
-                      getScoreColor(100 - (dayData.cost - 1.5) * 50).text
+                      getScoreColor(100 - dayData.waste * 10).text
                     }`}>
-                      ${dayData.cost.toFixed(2)}
+                      ${(dayData.waste * dayData.avgProduced / 100 * 2.50).toFixed(2)}
                     </td>
                   </tr>
                 );
@@ -280,8 +297,8 @@ const MenuItemDetails = () => {
         <span>Back to Menu Items</span>
       </button>
 
-      <div className="flex justify-between items-center">
-        <div>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
+        <div className="flex-1">
           <h1 className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {item.name}
           </h1>
@@ -289,7 +306,13 @@ const MenuItemDetails = () => {
             {item.category}
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <TimeframeSelector />
+          <SchoolSelector
+            selectedSchool={selectedSchool}
+            schools={schools}
+            onSchoolChange={handleSchoolChange}
+          />
           <button
             onClick={() => setShowSchoolieInsights(!showSchoolieInsights)}
             className={`p-2 ${
@@ -313,7 +336,7 @@ const MenuItemDetails = () => {
       {showSchoolieInsights && (
       <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
         <div className="flex items-start space-x-4">
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 mt-1">
             <div className={`w-10 h-10 rounded-full ${darkMode ? 'bg-indigo-900/50' : 'bg-indigo-50'} flex items-center justify-center`}>
               <Bot className={`w-6 h-6 ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`} />
             </div>
@@ -321,8 +344,14 @@ const MenuItemDetails = () => {
           <div className="flex-1">
             <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} leading-relaxed`}>
               {item.name} is one of your top performing menu items with consistently high participation and satisfaction rates.
-              It performs best on Mondays with 88% participation and lowest waste at 3.2%.
-              Cost efficiency is excellent, trending down 5% while maintaining quality.
+              {selectedSchool === 'district' 
+                ? 'It performs best on Mondays with 88% participation and lowest waste at 3.2%.'
+                : `It performs particularly well at ${schools.find(s => s.id === selectedSchool)?.name || 'this school'} with above-average participation.`
+              }
+              {selectedSchool === '4' 
+                ? 'At Primero High, this item has higher waste than other schools. Consider reviewing portion sizes or preparation methods.'
+                : 'Cost efficiency is excellent, trending down 5% while maintaining quality.'
+              }
             </p>
           </div>
         </div>
@@ -332,7 +361,7 @@ const MenuItemDetails = () => {
       {/* Metric Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
               <Users className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
               <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
@@ -353,12 +382,15 @@ const MenuItemDetails = () => {
           <div className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {item.metrics.participation.value}%
           </div>
+          <div className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {Math.round(item.metrics.participation.value * 2.5)} portions served from {Math.round(item.metrics.participation.value * 2.5 / 0.95)} portions produced
+          </div>
         </div>
 
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
-              <BarChart2 className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+              <DollarSign className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
               <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
                 Waste
               </h3>
@@ -375,16 +407,19 @@ const MenuItemDetails = () => {
             </div>
           </div>
           <div className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            {item.metrics.waste.value}%
+            ${(item.metrics.waste.value * 2.50).toFixed(2)} ({item.metrics.waste.value}%)
+          </div>
+          <div className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {Math.round(item.metrics.waste.value * 2.5)} wasted portions
           </div>
         </div>
 
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-3">
               <DollarSign className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
               <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                Cost per Serving
+                Cost
               </h3>
             </div>
             <div className="flex items-center space-x-2">
@@ -401,6 +436,9 @@ const MenuItemDetails = () => {
           <div className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             ${item.metrics.cost.value.toFixed(2)}
           </div>
+          <div className={`text-xs mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            2 Tacos per serving
+          </div>
         </div>
       </div>
 
@@ -411,7 +449,9 @@ const MenuItemDetails = () => {
       <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
         <h2 className={`text-lg font-medium mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           School Analysis
-          <div className="flex items-center space-x-2 mt-2">
+
+          {/*
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               Show:
             </span>
@@ -440,6 +480,8 @@ const MenuItemDetails = () => {
               Counts
             </button>
           </div>
+          */}
+          
         </h2>
         <div className="overflow-x-auto">
           <table className="min-w-full">
@@ -473,12 +515,12 @@ const MenuItemDetails = () => {
                 <th className={`px-4 py-2 text-right text-xs font-medium ${
                   darkMode ? 'text-gray-300' : 'text-gray-500'
                 } uppercase tracking-wider`}>
-                  Waste
+                  Waste %
                 </th>
                 <th className={`px-4 py-2 text-right text-xs font-medium ${
                   darkMode ? 'text-gray-300' : 'text-gray-500'
                 } uppercase tracking-wider`}>
-                  Cost
+                  Waste $
                 </th>
               </tr>
             </thead>
@@ -549,90 +591,22 @@ const MenuItemDetails = () => {
                     {showCounts ? (school.avgProduced - school.avgServed) : (100 - ((school.avgServed / school.avgProduced) * 100)).toFixed(1) + '%'}
                   </td>
                   <td className={`px-4 py-2 text-sm text-right ${getScoreColor(100 - school.waste * 10).text}`}>
-                    {showCounts ? Math.round(school.waste * school.avgProduced / 100) : school.waste + '%'}
+                    {school.waste + '%'}
                   </td>
-                  <td className={`px-4 py-2 text-sm text-right ${getScoreColor(100 - (school.cost - 1.5) * 50).text}`}>
-                    ${school.cost.toFixed(2)}
+                  <td className={`px-4 py-2 text-sm text-right ${getScoreColor(100 - school.waste * 10).text}`}>
+                    ${(school.waste * school.avgProduced / 100 * 2.50).toFixed(2)}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* Nutrition & Performance 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
-          <h2 className={`text-lg font-medium mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            Nutrition Information
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            {Object.entries(item.nutrition).map(([key, value]) => (
-              <div key={key} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} capitalize`}>
-                  {key}
-                </div>
-                <div className={`text-lg font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {value}{key === 'calories' ? '' : key === 'sodium' ? 'mg' : 'g'}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
-          <h2 className={`text-lg font-medium mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-            Performance Analysis
-          </h2>
-          <div className="space-y-6">
-            <div>
-              <h3 className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                Strengths
-              </h3>
-              <div className="space-y-2">
-                {item.performance.strengths.map((strength, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start space-x-2"
-                  >
-                    <CheckCircle2 className={`w-4 h-4 mt-0.5 ${
-                      darkMode ? 'text-green-400' : 'text-green-600'
-                    }`} />
-                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {strength}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {item.performance.warnings.length > 0 && (
-              <div>
-                <h3 className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
-                  Attention Needed
-                </h3>
-                <div className="space-y-2">
-                  {item.performance.warnings.map((warning, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start space-x-2"
-                    >
-                      <AlertTriangle className={`w-4 h-4 mt-0.5 ${
-                        darkMode ? 'text-amber-400' : 'text-amber-600'
-                      }`} />
-                      <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {warning}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+        <div className="mt-4 text-sm text-center">
+          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Data shown for {selectedSchool === 'district' ? 'all schools' : schools.find(s => s.id === selectedSchool)?.name || 'selected school'}
+          </p>
         </div>
       </div>
-        */}
     </div>
   );
 };
